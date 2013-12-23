@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<install version="1.5"
+         type="plugin"
+         group="k2"
+         method="upgrade">
+	<name>K2 - Indexed Categories</name>
+	<author>Matt Thomas</author>
+	<creationDate>December 16, 2013</creationDate>
+	<copyright>2013 Matt Thomas</copyright>
+	<license>GPL 2.0</license>
+	<authorEmail></authorEmail>
+	<authorUrl>http://www.betweenbrain.com</authorUrl>
+	<version>1.0</version>
+	<description>PLG_K2_INDEXED_CATEGORIES_DESC</description>
+	<files>
+		<filename plugin="indexed_categories">indexed_categories.php</filename>
+	</files>
+	<languages>
+		<language tag="en-GB">en-GB.plg_k2_indexed_categories.ini</language>
+	</languages>
+</install>
