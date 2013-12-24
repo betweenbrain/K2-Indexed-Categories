@@ -77,7 +77,9 @@ class plgK2Indexed_categories extends K2Plugin
 		$db->setQuery($query);
 		$catIds[] = $db->loadResult();
 
-		if (file_exists(JPATH_SITE . '/plugins/k2/k2additonalcategories.php'))
+		$addCatsPlugin = JPluginHelper::isEnabled('k2', 'k2additonalcategories');
+
+		if ($addCatsPlugin)
 		{
 
 			$query = 'SELECT catid
