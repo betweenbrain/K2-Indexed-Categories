@@ -9,6 +9,8 @@
  * License    GNU GPL v3 or later
  */
 
+jimport('joomla.error.log');
+
 // Load the K2 Plugin API
 JLoader::register('K2Plugin', JPATH_ADMINISTRATOR . '/components/com_k2/lib/k2plugin.php');
 
@@ -59,6 +61,7 @@ class plgK2Indexed_categories extends K2Plugin
 				WHERE id = ' . $this->db->Quote($row->id) . '';
 			$this->db->setQuery($query);
 			$this->db->query();
+			$this->checkDbError();
 		}
 	}
 
@@ -79,6 +82,7 @@ class plgK2Indexed_categories extends K2Plugin
 
 		$this->db->setQuery($query);
 		$catIds[] = $this->db->loadResult();
+		$this->checkDbError();
 
 		$addCatsPlugin = JPluginHelper::isEnabled('k2', 'k2additonalcategories');
 
@@ -91,6 +95,7 @@ class plgK2Indexed_categories extends K2Plugin
 
 			$this->db->setQuery($query);
 			$addCats = $this->db->loadResultArray();
+			$this->checkDbError();
 
 			foreach ($addCats as $addCat)
 			{
@@ -105,6 +110,7 @@ class plgK2Indexed_categories extends K2Plugin
 
 		$this->db->setQuery($query);
 		$categories = $this->db->loadObjectList();
+		$this->checkDbError();
 
 		return $categories;
 	}
@@ -117,19 +123,30 @@ class plgK2Indexed_categories extends K2Plugin
 
 		$this->db->setQuery($query);
 		$plugins = $this->db->loadResult();
+		$this->checkDbError();
 
 		$plugins = parse_ini_string($plugins, false, INI_SCANNER_RAW);
 
 		if (!($plugins[$type]))
 		{
 			$data  = json_encode($data);
-			$query = 'UPDATE ' . $this->db->nameQuote('#__k2_itemsz') . '
+			$query = 'UPDATE ' . $this->db->nameQuote('#__k2_items') . '
 					SET ' . $this->db->nameQuote('plugins') . ' = CONCAT(
 						' . $this->db->nameQuote('plugins') . ',' . $this->db->Quote($type . '=' . $data . "\n") . '
 					)
 					WHERE id = ' . $this->db->Quote($id) . '';
 			$this->db->setQuery($query);
 			$this->db->query();
+			$this->checkDbError();
+		}
+	}
+
+	private function checkDbError()
+	{
+		if ($error = $this->db->getErrorMsg())
+		{
+			$this->log->addEntry(array('LEVEL' => '1', 'STATUS' => 'Database Error:', 'COMMENT' => $error));
+			throw new Exception($error);
 		}
 	}
 }
