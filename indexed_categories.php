@@ -19,9 +19,15 @@ class plgK2Indexed_categories extends K2Plugin
 	var $pluginName = 'indexed_categories';
 	var $pluginNameHumanReadable = 'K2 - Indexed Categories';
 
-	function plgK2Indexed_categories(& $subject, $results)
+	/**
+	 * Constructor
+	 */
+	function __construct(&$subject, $results)
 	{
 		parent::__construct($subject, $results);
+		$this->app = JFactory::getApplication();
+		$this->db  = JFactory::getDbo();
+		$this->log = JLog::getInstance();
 	}
 
 	/**
@@ -33,13 +39,10 @@ class plgK2Indexed_categories extends K2Plugin
 	function onAfterK2Save(&$row, $isNew)
 	{
 
-		$app = JFactory::getApplication();
-		$db  = JFactory::getDbo();
-
-		if ($app->isAdmin())
+		if ($this->app->isAdmin())
 		{
 
-			$categories    = $this->fetchCategories($row->id);
+			$categories    = $this->getCategories($row->id);
 			$categoryNames = null;
 
 			foreach ($categories as $category)
@@ -47,13 +50,13 @@ class plgK2Indexed_categories extends K2Plugin
 				$categoryNames .= $category->name . ' ';
 			}
 
-			$query = 'UPDATE ' . $db->nameQuote('#__k2_items') . '
-				SET ' . $db->nameQuote('extra_fields_search') . ' = CONCAT(
-					' . $db->nameQuote('extra_fields_search') . ',' . $db->Quote($categoryNames) . '
+			$query = 'UPDATE ' . $this->db->nameQuote('#__k2_items') . '
+				SET ' . $this->db->nameQuote('extra_fields_search') . ' = CONCAT(
+					' . $this->db->nameQuote('extra_fields_search') . ',' . $this->db->Quote($categoryNames) . '
 				)
-				WHERE id = ' . $db->Quote($row->id) . '';
-			$db->setQuery($query);
-			$db->query();
+				WHERE id = ' . $this->db->Quote($row->id) . '';
+			$this->db->setQuery($query);
+			$this->db->query();
 		}
 	}
 
@@ -64,18 +67,16 @@ class plgK2Indexed_categories extends K2Plugin
 	 *
 	 * @return mixed
 	 */
-	private function fetchCategories($id)
+	private function getCategories($id)
 	{
 
-		$db = JFactory::getDbo();
-
 		$query = 'SELECT catid
-			FROM ' . $db->nameQuote('#__k2_items') . '
-			WHERE Id = ' . $db->Quote($id) . '
+			FROM ' . $this->db->nameQuote('#__k2_items') . '
+			WHERE Id = ' . $this->db->Quote($id) . '
 			AND published = 1';
 
-		$db->setQuery($query);
-		$catIds[] = $db->loadResult();
+		$this->db->setQuery($query);
+		$catIds[] = $this->db->loadResult();
 
 		$addCatsPlugin = JPluginHelper::isEnabled('k2', 'k2additonalcategories');
 
@@ -83,11 +84,11 @@ class plgK2Indexed_categories extends K2Plugin
 		{
 
 			$query = 'SELECT catid
-				FROM ' . $db->nameQuote('#__k2_additional_categories') . '
-				WHERE itemID = ' . $db->Quote($id);
+				FROM ' . $this->db->nameQuote('#__k2_additional_categories') . '
+				WHERE itemID = ' . $this->db->Quote($id);
 
-			$db->setQuery($query);
-			$addCats = $db->loadResultArray();
+			$this->db->setQuery($query);
+			$addCats = $this->db->loadResultArray();
 
 			foreach ($addCats as $addCat)
 			{
@@ -96,12 +97,12 @@ class plgK2Indexed_categories extends K2Plugin
 		}
 
 		$query = 'SELECT name
-			FROM ' . $db->nameQuote('#__k2_categories') . '
+			FROM ' . $this->db->nameQuote('#__k2_categories') . '
 			WHERE Id IN (' . implode(',', $catIds) . ')
 			AND published = 1';
 
-		$db->setQuery($query);
-		$categories = $db->loadObjectList();
+		$this->db->setQuery($query);
+		$categories = $this->db->loadObjectList();
 
 		return $categories;
 	}
