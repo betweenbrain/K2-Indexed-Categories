@@ -50,6 +50,8 @@ class plgK2Indexed_categories extends K2Plugin
 				$categoryNames .= $category->name . ' ';
 			}
 
+			$this->setK2ItemPluginsData($row->id, $categories, 'categories');
+
 			$query = 'UPDATE ' . $this->db->nameQuote('#__k2_items') . '
 				SET ' . $this->db->nameQuote('extra_fields_search') . ' = CONCAT(
 					' . $this->db->nameQuote('extra_fields_search') . ',' . $this->db->Quote($categoryNames) . '
@@ -105,5 +107,29 @@ class plgK2Indexed_categories extends K2Plugin
 		$categories = $this->db->loadObjectList();
 
 		return $categories;
+	}
+
+	private function setK2ItemPluginsData($id, $data, $type)
+	{
+		$query = 'SELECT ' . $this->db->nameQuote('plugins') .
+			' FROM ' . $this->db->nameQuote('#__k2_items') .
+			' WHERE id = ' . $this->db->Quote($id) . '';
+
+		$this->db->setQuery($query);
+		$plugins = $this->db->loadResult();
+
+		$plugins = parse_ini_string($plugins, false, INI_SCANNER_RAW);
+
+		if (!($plugins[$type]))
+		{
+			$data  = json_encode($data);
+			$query = 'UPDATE ' . $this->db->nameQuote('#__k2_itemsz') . '
+					SET ' . $this->db->nameQuote('plugins') . ' = CONCAT(
+						' . $this->db->nameQuote('plugins') . ',' . $this->db->Quote($type . '=' . $data . "\n") . '
+					)
+					WHERE id = ' . $this->db->Quote($id) . '';
+			$this->db->setQuery($query);
+			$this->db->query();
+		}
 	}
 }
