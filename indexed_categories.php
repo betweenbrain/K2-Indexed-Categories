@@ -45,14 +45,9 @@ class plgK2Indexed_categories extends K2Plugin
 		{
 
 			$categories    = $this->getCategories($row->id);
-			$categoryNames = null;
+			$categoryNames = implode(" ", $categories);
 
-			foreach ($categories as $category)
-			{
-				$categoryNames .= $category->name . ' ';
-			}
-
-			$this->setK2ItemPluginsData($row->id, $categories, 'categories');
+			$this->setpluginsData($row->id, $categories, 'categories');
 
 			$query = 'UPDATE ' . $this->db->nameQuote('#__k2_items') . '
 				SET ' . $this->db->nameQuote('extra_fields_search') . ' = CONCAT(
@@ -109,36 +104,44 @@ class plgK2Indexed_categories extends K2Plugin
 			AND published = 1';
 
 		$this->db->setQuery($query);
-		$categories = $this->db->loadObjectList();
+		$categories = $this->db->loadResultArray();
 		$this->checkDbError();
 
 		return $categories;
 	}
 
-	private function setK2ItemPluginsData($id, $data, $type)
+	private function setpluginsData($id, $data, $type)
+	{
+
+		$pluginsData         = $this->getpluginsData($id);
+		$pluginsArray        = parse_ini_string($pluginsData, false, INI_SCANNER_RAW);
+		$pluginsArray[$type] = implode(',', $data);
+		$pluginData          = null;
+		foreach ($pluginsArray as $key => $value)
+		{
+			$pluginData .= "$key=" . $value . "\n";
+		}
+
+		$query = 'UPDATE ' . $this->db->nameQuote('#__k2_items') .
+			' SET ' . $this->db->nameQuote('plugins') . '=\'' . $pluginData . '\'' .
+			' WHERE id = ' . $this->db->Quote($id) . '';
+
+		$this->db->setQuery($query);
+		$this->db->query();
+		$this->checkDbError();
+	}
+
+	private function getpluginsData($id)
 	{
 		$query = 'SELECT ' . $this->db->nameQuote('plugins') .
 			' FROM ' . $this->db->nameQuote('#__k2_items') .
 			' WHERE id = ' . $this->db->Quote($id) . '';
 
 		$this->db->setQuery($query);
-		$plugins = $this->db->loadResult();
+		$pluginsData = $this->db->loadResult();
 		$this->checkDbError();
 
-		$plugins = parse_ini_string($plugins, false, INI_SCANNER_RAW);
-
-		if (!($plugins[$type]))
-		{
-			$data  = json_encode($data);
-			$query = 'UPDATE ' . $this->db->nameQuote('#__k2_items') . '
-					SET ' . $this->db->nameQuote('plugins') . ' = CONCAT(
-						' . $this->db->nameQuote('plugins') . ',' . $this->db->Quote($type . '=' . $data . "\n") . '
-					)
-					WHERE id = ' . $this->db->Quote($id) . '';
-			$this->db->setQuery($query);
-			$this->db->query();
-			$this->checkDbError();
-		}
+		return $pluginsData;
 	}
 
 	private function checkDbError()
