@@ -44,20 +44,29 @@ class plgK2Indexed_categories extends K2Plugin
 		if ($this->app->isAdmin())
 		{
 
-			$categories    = $this->getCategories($row->id);
-			$categoryNames = implode(" ", $categories);
-
+			$categories = $this->getCategories($row->id);
+			$this->setExtraFieldsSearchData($row->id, $categories);
 			$this->setpluginsData($row->id, $categories, 'categories');
-
-			$query = 'UPDATE ' . $this->db->nameQuote('#__k2_items') . '
-				SET ' . $this->db->nameQuote('extra_fields_search') . ' = CONCAT(
-					' . $this->db->nameQuote('extra_fields_search') . ',' . $this->db->Quote($categoryNames) . '
-				)
-				WHERE id = ' . $this->db->Quote($row->id) . '';
-			$this->db->setQuery($query);
-			$this->db->query();
-			$this->checkDbError();
 		}
+	}
+
+	/**
+	 * Adds data to the extra_fields_search column of a K2 item
+	 *
+	 * @param $id
+	 * @param $data
+	 */
+	private function setExtraFieldsSearchData($id, $data)
+	{
+		$data  = implode(' ', $data);
+		$query = 'UPDATE ' . $this->db->nameQuote('#__k2_items') . '
+			SET ' . $this->db->nameQuote('extra_fields_search') . ' = CONCAT(
+				' . $this->db->nameQuote('extra_fields_search') . ',' . $this->db->Quote($data) . '
+			)
+			WHERE id = ' . $this->db->Quote($id) . '';
+		$this->db->setQuery($query);
+		$this->db->query();
+		$this->checkDbError();
 	}
 
 	/**
