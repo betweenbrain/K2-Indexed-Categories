@@ -122,10 +122,17 @@ class plgK2Indexed_categories extends K2Plugin
 	private function setpluginsData($id, $data, $type)
 	{
 
-		$pluginsData         = $this->getpluginsData($id);
-		$pluginsArray        = parse_ini_string($pluginsData, false, INI_SCANNER_RAW);
-		$pluginsArray[$type] = implode(',', $data);
-		$pluginData          = null;
+		$pluginsData  = $this->getpluginsData($id);
+		$pluginsArray = parse_ini_string($pluginsData, false, INI_SCANNER_RAW);
+		if ($data)
+		{
+			$pluginsArray[$type] = implode('|', $data);
+		}
+		else
+		{
+			unset($pluginsArray[$type]);
+		}
+		$pluginData = null;
 		foreach ($pluginsArray as $key => $value)
 		{
 			$pluginData .= "$key=" . $value . "\n";
