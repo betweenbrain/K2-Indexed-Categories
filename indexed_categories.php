@@ -160,12 +160,23 @@ class plgK2Indexed_categories extends K2Plugin
 		return $pluginsData;
 	}
 
-	private function checkDbError()
+	/**
+	 * Checks for any database errors after running a query
+	 *
+	 * @throws Exception
+	 */
+	private function checkDbError($backtrace = null)
 	{
 		if ($error = $this->db->getErrorMsg())
 		{
+			if ($backtrace)
+			{
+				$e = new Exception();
+				$error .= "\n" . $e->getTraceAsString();
+			}
+
 			$this->log->addEntry(array('LEVEL' => '1', 'STATUS' => 'Database Error:', 'COMMENT' => $error));
-			throw new Exception($error);
+			JError::raiseWarning(100, $error);
 		}
 	}
 }
